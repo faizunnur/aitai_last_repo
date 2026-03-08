@@ -142,14 +142,15 @@ jobs:
 
       - name: Setup SSH Key
         run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/ssh_key
-          chmod 600 /tmp/ssh_key
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
 
       - name: Wait for SSH
         run: |
           for i in $(seq 1 15); do
             ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 \
-              -i /tmp/ssh_key ubuntu@${{ needs.provision.outputs.server_ip }} echo ok \
+              -i ~/.ssh/id_rsa ubuntu@${{ needs.provision.outputs.server_ip }} echo ok \
               && break || sleep 5
           done
 
@@ -162,7 +163,7 @@ jobs:
         run: |
           ansible-playbook \
             -i "${{ needs.provision.outputs.server_ip }}," \
-            --private-key /tmp/ssh_key \
+            --private-key ~/.ssh/id_rsa \
             -u ubuntu \
             ansible/playbook.yml
         env:
